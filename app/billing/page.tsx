@@ -2,13 +2,6 @@
 
 import { useState } from "react";
 import { CheckCircle2, Copy, ExternalLink, QrCode, ShieldCheck } from "lucide-react";
-import { pageMetadata } from "@/lib/seo";
-
-export const metadata = pageMetadata(
-  "Billing - Subscription & Thanh toan",
-  "Nang cap goi dich vu ReviewPilot. Thanh toan MoMo, VietQR nhanh chong.",
-  "/billing",
-);
 
 const PLANS = [
   {
