@@ -1,5 +1,7 @@
 # ReviewPilot
 
+[![CI](https://github.com/vanbui-2705/reviewpilot/actions/workflows/ci.yml/badge.svg)](https://github.com/vanbui-2705/reviewpilot/actions/workflows/ci.yml)
+
 ## Build requirements
 
 Xem checklist setup/build tai `BUILD_REQUIREMENTS.md`.
