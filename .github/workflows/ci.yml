@@ -19,8 +19,18 @@ jobs:
         node-version: '20'
         cache: 'npm'
 
+    - name: Cache Next.js build
+      uses: actions/cache@v4
+      with:
+        path: |
+          .next
+          node_modules
+        key: ${{ runner.os }}-next-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-next-
+
     - name: Install dependencies
-      run: npm ci
+      run: npm ci --prefer-offline --no-audit
 
     # - name: Lint
     #   run: npm run lint
@@ -29,12 +39,5 @@ jobs:
     - name: Build
       run: npm run build
       env:
-        # Skip type checking during build since next build handles it
         NEXT_TELEMETRY_DISABLED: 1
-
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: build-output
-        path: .next/
+        NODE_OPTIONS: "--max-old-space-size=4096"
