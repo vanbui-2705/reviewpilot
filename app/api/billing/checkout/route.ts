@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { createMomoPayment, createVietQR } from "@/lib/payment/momo";
+import { createMomoPayment } from "@/lib/payment/momo";
+import { createVietQR } from "@/lib/payment/vietqr";
 import { cookies } from "next/headers";
 
 const schema = z.object({
