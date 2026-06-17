@@ -1,0 +1,277 @@
+// Prisma schema — chạy `npx prisma migrate dev --name init-products` sau khi sửa
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+// ── Product Registry ──────────────────────────────────────────────
+
+model Product {
+  id String @id @default(cuid())
+  name String
+  brand String
+  model String?
+  slug String @unique @db.VarChar(200)
+  imageUrl String?
+  status String @default("active") // active | inactive | discontinued
+  specs Json? // { chip, screen, camera, battery, os, storage, ... }
+  shortDescription String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  prices Price[]
+  priceHistory PriceHistory[]
+
+  @@index([brand])
+  @@index([slug])
+  @@index([status])
+}
+
+model Price {
+  id String @id @default(cuid())
+  productId String
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  source String // Shopee | Lazada | Tiki | ... (max 50 chars)
+  price Int // VND
+  url String? // affiliate link
+  scrapedAt DateTime @default(now())
+
+  @@index([productId])
+  @@index([scrapedAt])
+}
+
+model PriceHistory {
+  id String @id @default(cuid())
+  productId String
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  avgPrice Int // average across all sources
+  minPrice Int // cheapest source on that day
+  maxPrice Int // most expensive source on that day
+  date DateTime // always midnight local (date only)
+
+  @@unique([productId, date])
+  @@index([productId])
+  @@index([date])
+}
+
+// ── Shopee management ──────────────────────────────────────────────
+
+model Shop {
+  id String @id @default(cuid())
+  name String
+  shopeeShopId String? @unique
+  shopeeUrl String
+  logo String?
+  plan String @default("starter") // starter | pro | enterprise
+  status String @default("active") // active | suspended | pending
+  monthlyQuota Int @default(500)
+  crawlUsed Int @default(0)
+  lastCrawledAt DateTime?
+  userId String?
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  products ShopeeProduct[]
+  crawlLogs CrawlLog[]
+  metrics ShopMetric[]
+  reviews ShopReview[]
+}
+
+model ShopeeProduct {
+  id String @id @default(cuid())
+  shopId String
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  itemId String
+  name String
+  slug String @unique
+  image String?
+  imageThumb String?
+  priceMin Int?
+  priceMax Int?
+  originalPrice Int?
+  stock Int?
+  sold Int?
+  rating Float?
+  ratingCount Int?
+  likes Int?
+  status String @default("active") // active | deleted | banned
+  attributes String? // JSON: [{name, value}]
+  categories String? // JSON: [catId, catName]
+  url String
+  shopeeUrl String
+  lastSyncedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shopId])
+  @@index([itemId])
+  @@index([slug])
+}
+
+model CrawlLog {
+  id String @id @default(cuid())
+  shopId String
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  status String // success | failed | partial
+  productsFound Int @default(0)
+  productsNew Int @default(0)
+  productsUpdated Int @default(0)
+  error String?
+  startedAt DateTime @default(now())
+  finishedAt DateTime?
+}
+
+// ── Nền tảng & Cập nhật ──────────────────────────────────────────────
+
+model PlatformNews {
+  id String @id @default(cuid())
+  title String
+  tag String
+  color String
+  link String?
+  publishedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ── Báo cáo & Thống kê ──────────────────────────────────────────────
+
+model ShopMetric {
+  id String @id @default(cuid())
+  shopId String
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  date DateTime
+  revenue Float @default(0)
+  orders Int @default(0)
+  visitors Int @default(0)
+  createdAt DateTime @default(now())
+
+  @@unique([shopId, date])
+}
+
+model ShopReview {
+  id String @id @default(cuid())
+  shopId String
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  productId String?
+  reviewerName String
+  rating Int
+  content String
+  status String @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shopId])
+}
+
+// ── Hệ thống Auth & Tài khoản ──────────────────────────────────────────────
+
+model User {
+  id String @id @default(cuid())
+  name String?
+  email String? @unique
+  emailVerified DateTime?
+  image String?
+  passwordHash String?
+  role String @default("SHOP_OWNER")
+  permissions String?
+  status String @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+  shops Shop[]
+  payments Payment[]
+}
+
+model Account {
+  id String @id @default(cuid())
+  userId String
+  type String
+  provider String
+  providerAccountId String
+  refresh_token String?
+  access_token String?
+  expires_at Int?
+  token_type String?
+  scope String?
+  id_token String?
+  session_state String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id String @id @default(cuid())
+  sessionToken String @unique
+  userId String
+  expires DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token String @unique
+  expires DateTime
+
+  @@unique([identifier, token])
+}
+
+// ── Billing & Payments ──────────────────────────────────────────────
+
+model Payment {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan           String    // starter | pro | enterprise
+  method         String    // momo | vietqr
+  amount         Int       // VND
+  currency       String    @default("VND")
+  status         String    @default("pending") // pending | success | failed | expired
+  orderId        String    @unique
+  transactionId  String?
+  momoQrCode     String?
+  momoPayUrl     String?
+  vietqrImage    String?
+  bankInfo       Json?     // { bankName, accountNumber, accountHolder, transferContent }
+  paidAt         DateTime?
+  expiresAt      DateTime
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([orderId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ── Blog / SEO Content ──────────────────────────────────────────────
+
+model Article {
+  id           String    @id @default(cuid())
+  title        String    @db.VarChar(200)
+  slug         String    @unique @db.VarChar(200)
+  excerpt      String?   @db.Text
+  content      String    @db.Text
+  coverImage   String?
+  tags         String[]  @default([])
+  status       String    @default("draft") // draft | published
+  publishedAt  DateTime?
+  author       String    @default("ReviewPilot Team")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([tags])
+}

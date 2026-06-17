@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: "Be Vietnam Pro", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", monospace;
+  --font-editorial: "Libre Baskerville", "Georgia", serif;
+  --color-ink: #0f172a;
+  --color-muted: #647084;
+  --color-line: #e5e7eb;
+  --color-paper: #ffffff;
+  --color-soft: #f8f9fa;
+  --color-shopee: #ee4d2d;
+  --color-leaf: #15803d;
+  --color-ocean: #2563eb;
+  --color-terminal-bg: #0b1120;
+  --color-terminal-surface: #111827;
+  --color-terminal-accent: #f59e0b;
+  --color-terminal-muted: #6b7280;
+  --color-terminal-green: #22c55e;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-shopee/40 focus:ring-offset-2;
+}
+
+.page-band {
+  @apply border-y border-line bg-soft;
+}
+
+.container-page {
+  @apply mx-auto w-[min(1180px,calc(100%-32px))];
+}
+
+.card {
+  @apply rounded-lg border border-line bg-white shadow-sm transition-all duration-200 hover:shadow-md hover:border-shopee/30;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg bg-shopee px-5 py-3 font-bold text-white shadow-sm transition-all duration-200 hover:bg-shopee/90 hover:shadow active:scale-[0.98];
+}
+
+.btn-outline {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-white px-5 py-3 font-bold text-ink transition-all duration-200 hover:border-ink hover:bg-ink hover:text-white;
+}
+
+.badge {
+  @apply inline-flex items-center rounded-full bg-soft px-3 py-1 text-xs font-bold text-muted;
+}
+
+.badge-shopee {
+  @apply inline-flex items-center rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-shopee;
+}
+
+/* ── Typography utilities ── */
+.font-mono {
+  font-family: var(--font-mono);
+}
+.font-editorial {
+  font-family: var(--font-editorial);
+}
+
+/* ── Industrial-utilitarian terminal card ── */
+.terminal-card {
+  background: var(--color-terminal-bg);
+  border: 1px solid #1e293b;
+  box-shadow: 0 0 0 1px #0b1120, 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+.terminal-card-inner {
+  background: var(--color-terminal-surface);
+  border: 1px solid #1f2937;
+}
+
+/* ── Scan-line overlay for terminal aesthetic ── */
+.scanlines::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ── Blinking cursor for terminal hero ── */
+@keyframes blink {
+  0%, 45% { opacity: 1; }
+  55%, 100% { opacity: 0; }
+}
+.blink-cursor::after {
+  content: "|";
+  animation: blink 1.2s step-end infinite;
+  color: var(--color-terminal-accent);
+  margin-left: 2px;
+}
+
+/* ── Grid-pattern background for downloader section ── */
+.grid-pattern {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+@keyframes slideInLeft {
+  0% { transform: translateX(-100%); opacity: 0; }
+  50% { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
